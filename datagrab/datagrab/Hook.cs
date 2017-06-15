@@ -1,7 +1,10 @@
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using TerraLimb;
 using Terraria;
@@ -13,120 +16,199 @@ namespace datagrab
 {
     public class Hook : Main
     {
+        private bool _written;
         protected override void Initialize()
         {
-            Content.RootDirectory = Program.WORKING_FOLDER + @"\Content";
+            Content.RootDirectory = Program.CONTENT_PATH;
             Lang.InitializeLegacyLocalization();
             base.Initialize();
         }
 
-        private KeyboardState oldKbState;
+        protected override void LoadContent()
+        {
+            Console.WriteLine("Setting Up the Data Directory");
+            var dumpPath = Path.Combine(Environment.CurrentDirectory, "Data");
+
+            if (!Directory.Exists(dumpPath))
+                Directory.CreateDirectory(dumpPath);
+
+            if (!Directory.Exists(Path.Combine(dumpPath, "Misc")))
+                Directory.CreateDirectory(Path.Combine(dumpPath, "Misc"));
+
+            Console.WriteLine("Loading Textures from {0}", Program.CONTENT_PATH);
+            Console.WriteLine();
+            var dir = new DirectoryInfo(Program.CONTENT_PATH);
+            var watch = new Stopwatch();
+            watch.Start();
+            foreach (FileInfo xnb in dir.GetFiles("*.xnb"))
+            {
+                Texture2D texture;
+                var name = xnb.Name.Replace(".xnb", "");
+                try
+                {
+                    texture = base.Content.Load<Texture2D>(name);
+                }
+                catch (ContentLoadException)
+                {
+                    Console.WriteLine("Failed  to load " + name);
+                    continue;
+                }
+
+                if (name.Contains("_"))
+                {
+                    CreateDirectories(dumpPath, name);
+                    texture.SaveAsPng(File.Create(Path.Combine(dumpPath, name.Replace("_", "/") + ".png")), texture.Width, texture.Height);
+                }
+                else
+                    texture.SaveAsPng(File.Create(Path.Combine(dumpPath, "Misc", name + ".png")), texture.Width, texture.Height);
+            }
+            watch.Stop();
+            Console.WriteLine("Completed in {0} Seconds", watch.Elapsed.TotalSeconds);
+            base.LoadContent();
+        }
+
+
+        public void CreateDirectories(string dataPath, string name)
+        {
+            var names = name.Split('_');
+            for (int i = 0; i < names.Length - 1; i++)
+            {
+                dataPath = Path.Combine(dataPath, names[i]);
+                if (!Directory.Exists(dataPath))
+                    Directory.CreateDirectory(dataPath);
+            }
+        }
 
         protected override void Update(GameTime gameTime)
         {
-            var kbState = Keyboard.GetState();
-            // Press SHIFT + TAB to dump
-            if (kbState.IsKeyUp(Keys.Tab) && kbState.PressingShift() && oldKbState.IsKeyDown(Keys.Tab))
+            var watch = new Stopwatch();
+            if (!_written)
             {
-                DumpItems(0, ItemID.Count);
-                DumpBuffs(0, BuffID.Count);
-                DumpPrefixes(0, PrefixID.Count);
+                watch.Start();
+                Console.Write("Writing json files...items...");
+                DumpItems(ItemID.Count, Path.Combine(Environment.CurrentDirectory, "Data"));
+                Console.Write("buffs...");
+                DumpBuffs(BuffID.Count, Path.Combine(Environment.CurrentDirectory, "Data"));
+                Console.Write("prefixes...");
+                DumpPrefixes(PrefixID.Count, Path.Combine(Environment.CurrentDirectory, "Data"));
+                Console.WriteLine("Done!");
+                _written = true;
+                watch.Stop();
+                Console.WriteLine("Completed in {0} Seconds", watch.Elapsed.TotalSeconds);
             }
-
-            if (kbState.IsKeyUp(Keys.F1) && kbState.PressingShift() && oldKbState.IsKeyDown(Keys.F1))
+            else
             {
-                // reading
-                //String json = File.ReadAllText("items.json");
-                //Dictionary<int, TerraLimb.Item> items = JsonConvert.DeserializeObject<Dictionary<int, TerraLimb.Item>>(json);
+                Console.WriteLine("Press any key to exit");
+                Console.ReadKey();
+                Environment.Exit(0);
             }
-            oldKbState = kbState;
+            // reading
+            //String json = File.ReadAllText("items.json");
+            //Dictionary<int, TerraLimb.Item> items = JsonConvert.DeserializeObject<Dictionary<int, TerraLimb.Item>>(json);
             base.Update(gameTime);
         }
 
-        private void DumpItems(int low, int high)
+        public void DumpItems(int count, string path)
         {
             var items = new Dictionary<int, Item>();
-            Item itm;
-            for (var i = low; i < high; i++)
+            var itm = new Item
+            {
+                ItemID = 0,
+                ItemName = "(none)"
+            };
+
+            items.Add(0, itm);
+            for (var i = 0; i < count; i++)
             {
                 itm = GetItem(i);
                 if (itm.ItemID != 0)
                     items.Add(i, itm);
             }
-            File.WriteAllText(@"items.json",
+            File.WriteAllText(path + @"\items.json",
                 JsonConvert.SerializeObject(items, Formatting.None,
-                    new JsonSerializerSettings {DefaultValueHandling = DefaultValueHandling.Ignore}));
+                    new JsonSerializerSettings { DefaultValueHandling = DefaultValueHandling.Ignore }));
         }
 
-        private void DumpBuffs(int low, int high)
+        public void DumpBuffs(int count, string path)
         {
             var buffs = new Dictionary<int, Buff>();
-            for (var i = low; i < high; i++)
+            var buff = new Buff
             {
-                var buff = GetBuff(i);
+                BuffID = 0,
+                BuffName = "(none)",
+                BuffDescription = ""
+            };
+            buffs.Add(0, buff);
+            for (var i = 0; i < count; i++)
+            {
+                buff = GetBuff(i);
                 if (buff.BuffID != 0)
                     buffs.Add(i, buff);
             }
-            File.WriteAllText(@"buffs.json",
+            File.WriteAllText(path + @"\buffs.json",
                 JsonConvert.SerializeObject(buffs, Formatting.None,
-                    new JsonSerializerSettings {DefaultValueHandling = DefaultValueHandling.Ignore}));
+                    new JsonSerializerSettings { DefaultValueHandling = DefaultValueHandling.Ignore }));
         }
 
-        private void DumpPrefixes(int low, int high)
+        public void DumpPrefixes(int count, string path)
         {
             var prefixes = new Dictionary<int, Prefix>();
-            var prfx = new Prefix();
-            for (var i = low; i < high; i++)
+            var prfx = new Prefix
             {
-                prfx.ID = (byte) i;
+                ID = 0,
+                Name = "(none)"
+            };
+            prefixes.Add(0, prfx);
+            for (var i = 0; i < count; i++)
+            {
+                prfx.ID = (byte)i;
                 prfx.Name = Language.GetTextValue(Lang.prefix[i].Value);
-                prefixes.Add(i, prfx);
+                if (prfx.ID != 0)
+                    prefixes.Add(i, prfx);
             }
-            File.WriteAllText(@"prefixes.json",
+            File.WriteAllText(path + @"\prefixes.json",
                 JsonConvert.SerializeObject(prefixes, Formatting.None,
-                    new JsonSerializerSettings {DefaultValueHandling = DefaultValueHandling.Ignore}));
+                    new JsonSerializerSettings { DefaultValueHandling = DefaultValueHandling.Ignore }));
         }
 
-        private Buff GetBuff(int type)
+        private static Buff GetBuff(int type)
         {
-            var buff = new Buff();
-            buff.BuffID = type;
-            buff.BuffName = Language.GetTextValue(Lang.GetBuffName(type));
-            buff.BuffDescription = Language.GetTextValue(Lang.GetBuffDescription(type));
+            var buff = new Buff
+            {
+                BuffID = type,
+                BuffName = Language.GetTextValue(Lang.GetBuffName(type)),
+                BuffDescription = Language.GetTextValue(Lang.GetBuffDescription(type))
+            };
             return buff;
         }
 
-        private Item GetItem(int type)
+        private static Item GetItem(int type)
         {
-            var item = new Item();
             var terraItem = new Terraria.Item();
-
             terraItem.SetDefaults(type);
-
-            item.ItemID = terraItem.netID;
-            item.MaxStack = terraItem.maxStack;
-            item.ItemName = Lang.GetItemName(terraItem.netID).ToNetworkText().ToString();
-
-            item.BackSlot = terraItem.backSlot;
-            item.BalloonSlot = terraItem.balloonSlot;
-            item.BodySlot = terraItem.bodySlot;
-            item.FaceSlot = terraItem.faceSlot;
-            item.FrontSlot = terraItem.frontSlot;
-            item.HandOffSlot = terraItem.handOffSlot;
-            item.HandOnSlot = terraItem.handOnSlot;
-            item.HeadSlot = terraItem.headSlot;
-            item.LegSlot = terraItem.legSlot;
-            item.NeckSlot = terraItem.neckSlot;
-            item.ShieldSlot = terraItem.shieldSlot;
-            item.ShoeSlot = terraItem.shoeSlot;
-            item.WaistSlot = terraItem.waistSlot;
-            item.WingSlot = terraItem.wingSlot;
-
-            item.Color = terraItem.color.PackedValue == 0
-                ? null
-                : new int[] {terraItem.color.A, terraItem.color.R, terraItem.color.G, terraItem.color.B};
-
-            return item;
+            return new Item
+            {
+                ItemID = terraItem.netID,
+                MaxStack = terraItem.maxStack,
+                ItemName = Lang.GetItemName(terraItem.netID).ToNetworkText().ToString(),
+                BackSlot = terraItem.backSlot,
+                BalloonSlot = terraItem.balloonSlot,
+                BodySlot = terraItem.bodySlot,
+                FaceSlot = terraItem.faceSlot,
+                FrontSlot = terraItem.frontSlot,
+                HandOffSlot = terraItem.handOffSlot,
+                HandOnSlot = terraItem.handOnSlot,
+                HeadSlot = terraItem.headSlot,
+                LegSlot = terraItem.legSlot,
+                NeckSlot = terraItem.neckSlot,
+                ShieldSlot = terraItem.shieldSlot,
+                ShoeSlot = terraItem.shoeSlot,
+                WaistSlot = terraItem.waistSlot,
+                WingSlot = terraItem.wingSlot,
+                Color = terraItem.color.PackedValue == 0
+                    ? null
+                    : new int[] { terraItem.color.A, terraItem.color.R, terraItem.color.G, terraItem.color.B }
+            };
         }
     }
 }
