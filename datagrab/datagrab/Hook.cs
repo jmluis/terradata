@@ -30,9 +30,10 @@ namespace datagrab
             "Skin"
         };
         private bool _written;
-
+        private string _dumpPath;
         protected override void Initialize()
         {
+            _dumpPath = Path.Combine(Environment.CurrentDirectory, "Data");
             Content.RootDirectory = Program.CONTENT_PATH;
             Lang.InitializeLegacyLocalization();
             base.Initialize();
@@ -40,6 +41,9 @@ namespace datagrab
 
         protected override void LoadContent()
         {
+            Console.WriteLine("Setting Up the Data Directory");
+            if (!Directory.Exists(_dumpPath))
+                Directory.CreateDirectory(_dumpPath);
             WritePackage();
             DumpTextures();
             base.LoadContent();
@@ -47,31 +51,22 @@ namespace datagrab
 
         void WritePackage()
         {
-            Console.Write($"Writing Package...project{Program.PROJECT_NUMBER} Rev. {Program.REVISION_NUMBER}...");
-            var path = Path.Combine(Environment.CurrentDirectory, "Data");
+            Console.Write($"Writing Package...project {Program.PROJECT_NUMBER} Rev. {Program.REVISION_NUMBER}...");
             var package = new TerraLimb.Package
             {
+                Version = Program.VERSION_NUMBER,
                 TerrariaVersion = Main.curRelease,
                 TerrariaVersionString = Main.versionNumber,
                 ProjectNo = Program.PROJECT_NUMBER,
                 RevNo = Program.REVISION_NUMBER
             };
 
-            File.WriteAllText(path + @"\package.json", JsonConvert.SerializeObject(package, Formatting.None));
+            File.WriteAllText(_dumpPath + @"\package.json", JsonConvert.SerializeObject(package, Formatting.None));
             Console.WriteLine("done!");
         }
 
         void DumpTextures()
         {
-            Console.WriteLine("Setting Up the Data Directory");
-            var dumpPath = Path.Combine(Environment.CurrentDirectory, "Data");
-
-            if (!Directory.Exists(dumpPath))
-                Directory.CreateDirectory(dumpPath);
-
-            if (!Directory.Exists(Path.Combine(dumpPath, "Misc")))
-                Directory.CreateDirectory(Path.Combine(dumpPath, "Misc"));
-
             Console.WriteLine("Loading Textures from {0}", Program.CONTENT_PATH + "\\Images");
             var watch = new Stopwatch();
             watch.Start();
@@ -82,8 +77,8 @@ namespace datagrab
 
                 if (!name.Contains("_") || !_toDownload.Contains(name.Split('_')[0])) continue;
                 var texture = base.Content.Load<Texture2D>("Images\\" + name);
-                CreateDirectories(dumpPath, name);
-                texture.SaveAsPng(File.Create(Path.Combine(dumpPath, name.Replace("_", "/") + ".png")),
+                CreateDirectories(_dumpPath, name);
+                texture.SaveAsPng(File.Create(Path.Combine(_dumpPath, name.Replace("_", "/") + ".png")),
                     texture.Width, texture.Height);
                 texture.Dispose();
             }
@@ -117,11 +112,11 @@ namespace datagrab
             {
                 watch.Start();
                 Console.Write("Writing json files...items...");
-                DumpItems(ItemID.Count, Path.Combine(Environment.CurrentDirectory, "Data"));
+                DumpItems(ItemID.Count, _dumpPath);
                 Console.Write("buffs...");
-                DumpBuffs(BuffID.Count, Path.Combine(Environment.CurrentDirectory, "Data"));
+                DumpBuffs(BuffID.Count, _dumpPath);
                 Console.Write("prefixes...");
-                DumpPrefixes(PrefixID.Count, Path.Combine(Environment.CurrentDirectory, "Data"));
+                DumpPrefixes(PrefixID.Count, _dumpPath);
                 Console.WriteLine("Done!");
                 _written = true;
                 watch.Stop();
@@ -130,7 +125,7 @@ namespace datagrab
             else
             {
                 Console.WriteLine("Press any key to exit");
-                Console.ReadKey();
+                Process.Start(_dumpPath);
                 Environment.Exit(0);
             }
             base.Update(gameTime);
@@ -142,7 +137,8 @@ namespace datagrab
             var itm = new Item
             {
                 ItemID = 0,
-                ItemName = "(none)"
+                ItemName = string.Empty,
+                Nick = string.Empty
             };
 
             items.Add(0, itm);
@@ -153,8 +149,11 @@ namespace datagrab
                     items.Add(i, itm);
             }
             File.WriteAllText(path + @"\items.json",
-                JsonConvert.SerializeObject(items, Formatting.None,
-                    new JsonSerializerSettings { DefaultValueHandling = DefaultValueHandling.Ignore }));
+                        JsonConvert.SerializeObject(items, Formatting.Indented,
+                            new JsonSerializerSettings
+                            {
+                                DefaultValueHandling = DefaultValueHandling.Ignore
+                            }));
         }
 
         public void DumpBuffs(int count, string path)
@@ -163,7 +162,7 @@ namespace datagrab
             var buff = new Buff
             {
                 BuffID = 0,
-                BuffName = "(none)",
+                BuffName = "",
                 BuffDescription = ""
             };
             buffs.Add(0, buff);
@@ -184,7 +183,7 @@ namespace datagrab
             var prfx = new Prefix
             {
                 ID = 0,
-                Name = "(none)"
+                Name = ""
             };
             prefixes.Add(0, prfx);
             for (var i = 0; i < count; i++)
@@ -213,10 +212,11 @@ namespace datagrab
         private static Item GetItem(int type)
         {
             var terraItem = new Terraria.Item();
-            terraItem.SetDefaults(type);
+            terraItem.netDefaults(type);
             return new Item
             {
                 ItemID = terraItem.netID,
+                Nick = string.Empty,
                 MaxStack = terraItem.maxStack,
                 ItemName = Lang.GetItemName(terraItem.netID).ToNetworkText().ToString(),
                 BackSlot = terraItem.backSlot,
