@@ -87,9 +87,6 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="TerraLimb">
-      <HintPath>..\..\..\..\..\GitHub\TerraLimb\bin\Debug\TerraLimb.dll</HintPath>
-    </Reference>
     <Reference Include="Terraria, Version=1.3.5.1, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\..\..\steamapps\common\Terraria\vak\Terraria.exe</HintPath>
@@ -107,6 +104,10 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\TerraLimb\TerraLimb.csproj">
+      <Project>{c958f112-3f9f-4593-967e-d76f7c4892b5}</Project>
+      <Name>TerraLimb</Name>
+    </ProjectReference>
     <ProjectReference Include="..\datagrabContent\datagrabContent.contentproj">
       <Name>datagrabContent</Name>
       <XnaReferenceType>Content</XnaReferenceType>

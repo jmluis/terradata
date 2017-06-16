@@ -40,6 +40,29 @@ namespace datagrab
 
         protected override void LoadContent()
         {
+            WritePackage();
+            DumpTextures();
+            base.LoadContent();
+        }
+
+        void WritePackage()
+        {
+            Console.Write($"Writing Package...project{Program.PROJECT_NUMBER} Rev. {Program.REVISION_NUMBER}...");
+            var path = Path.Combine(Environment.CurrentDirectory, "Data");
+            var package = new TerraLimb.Package
+            {
+                TerrariaVersion = Main.curRelease,
+                TerrariaVersionString = Main.versionNumber,
+                ProjectNo = Program.PROJECT_NUMBER,
+                RevNo = Program.REVISION_NUMBER
+            };
+
+            File.WriteAllText(path + @"\package.json", JsonConvert.SerializeObject(package, Formatting.None));
+            Console.WriteLine("done!");
+        }
+
+        void DumpTextures()
+        {
             Console.WriteLine("Setting Up the Data Directory");
             var dumpPath = Path.Combine(Environment.CurrentDirectory, "Data");
 
@@ -66,7 +89,6 @@ namespace datagrab
             }
             watch.Stop();
             Console.WriteLine("Completed in {0} Seconds", watch.Elapsed.TotalSeconds);
-            base.LoadContent();
         }
 
         public IEnumerable<string> FilterFiles(string path, params string[] exts)
@@ -111,9 +133,6 @@ namespace datagrab
                 Console.ReadKey();
                 Environment.Exit(0);
             }
-            // reading
-            //String json = File.ReadAllText("items.json");
-            //Dictionary<int, TerraLimb.Item> items = JsonConvert.DeserializeObject<Dictionary<int, TerraLimb.Item>>(json);
             base.Update(gameTime);
         }
 

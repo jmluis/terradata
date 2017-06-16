@@ -5,20 +5,36 @@ VisualStudioVersion = 15.0.26430.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "datagrab", "datagrab\datagrab\datagrab.csproj", "{69F3A8D1-AC95-432E-B5A6-C38122F64CFC}"
 EndProject
-Project("{96E2B04D-8817-42C6-938A-82C39BA4D311}") = "datagrabContent", "datagrab\datagrabContent\datagrabContent.contentproj", "{80F9E25A-BD89-4740-9E67-1B80A9F89995}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "datagrabContent", "datagrab\datagrabContent\datagrabContent.contentproj", "{80F9E25A-BD89-4740-9E67-1B80A9F89995}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TerraLimb", "..\TerraLimb\TerraLimb.csproj", "{C958F112-3F9F-4593-967E-D76F7C4892B5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
 		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{69F3A8D1-AC95-432E-B5A6-C38122F64CFC}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{69F3A8D1-AC95-432E-B5A6-C38122F64CFC}.Debug|x86.ActiveCfg = Debug|x86
 		{69F3A8D1-AC95-432E-B5A6-C38122F64CFC}.Debug|x86.Build.0 = Debug|x86
+		{69F3A8D1-AC95-432E-B5A6-C38122F64CFC}.Release|Any CPU.ActiveCfg = Release|x86
 		{69F3A8D1-AC95-432E-B5A6-C38122F64CFC}.Release|x86.ActiveCfg = Release|x86
 		{69F3A8D1-AC95-432E-B5A6-C38122F64CFC}.Release|x86.Build.0 = Release|x86
+		{80F9E25A-BD89-4740-9E67-1B80A9F89995}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{80F9E25A-BD89-4740-9E67-1B80A9F89995}.Debug|x86.ActiveCfg = Debug|x86
+		{80F9E25A-BD89-4740-9E67-1B80A9F89995}.Release|Any CPU.ActiveCfg = Release|x86
 		{80F9E25A-BD89-4740-9E67-1B80A9F89995}.Release|x86.ActiveCfg = Release|x86
+		{C958F112-3F9F-4593-967E-D76F7C4892B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C958F112-3F9F-4593-967E-D76F7C4892B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C958F112-3F9F-4593-967E-D76F7C4892B5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C958F112-3F9F-4593-967E-D76F7C4892B5}.Debug|x86.Build.0 = Debug|Any CPU
+		{C958F112-3F9F-4593-967E-D76F7C4892B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C958F112-3F9F-4593-967E-D76F7C4892B5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C958F112-3F9F-4593-967E-D76F7C4892B5}.Release|x86.ActiveCfg = Release|Any CPU
+		{C958F112-3F9F-4593-967E-D76F7C4892B5}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
