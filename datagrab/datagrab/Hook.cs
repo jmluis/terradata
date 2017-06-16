@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using TerraLimb;
@@ -16,7 +16,21 @@ namespace datagrab
 {
     public class Hook : Main
     {
+        readonly List<string> _toDownload = new List<string>
+        {
+            "Armor",
+            "Background",
+            "BackPack",
+            "Buff",
+            "Female",
+            "Inventory",
+            "Item",
+            "ItemFlame",
+            "Player",
+            "Skin"
+        };
         private bool _written;
+
         protected override void Initialize()
         {
             Content.RootDirectory = Program.CONTENT_PATH;
@@ -35,43 +49,38 @@ namespace datagrab
             if (!Directory.Exists(Path.Combine(dumpPath, "Misc")))
                 Directory.CreateDirectory(Path.Combine(dumpPath, "Misc"));
 
-            Console.WriteLine("Loading Textures from {0}", Program.CONTENT_PATH);
-            Console.WriteLine();
-            var dir = new DirectoryInfo(Program.CONTENT_PATH);
+            Console.WriteLine("Loading Textures from {0}", Program.CONTENT_PATH + "\\Images");
             var watch = new Stopwatch();
             watch.Start();
-            foreach (FileInfo xnb in dir.GetFiles("*.xnb"))
+            foreach (var xnb in FilterFiles(Program.CONTENT_PATH + "\\Images", _toDownload.ToArray()))
             {
-                Texture2D texture;
-                var name = xnb.Name.Replace(".xnb", "");
-                try
-                {
-                    texture = base.Content.Load<Texture2D>(name);
-                }
-                catch (ContentLoadException)
-                {
-                    Console.WriteLine("Failed  to load " + name);
-                    continue;
-                }
+                var fileinfo = new FileInfo(xnb);
+                var name = fileinfo.Name.Replace(".xnb", "");
 
-                if (name.Contains("_"))
-                {
-                    CreateDirectories(dumpPath, name);
-                    texture.SaveAsPng(File.Create(Path.Combine(dumpPath, name.Replace("_", "/") + ".png")), texture.Width, texture.Height);
-                }
-                else
-                    texture.SaveAsPng(File.Create(Path.Combine(dumpPath, "Misc", name + ".png")), texture.Width, texture.Height);
+                if (!name.Contains("_") || !_toDownload.Contains(name.Split('_')[0])) continue;
+                var texture = base.Content.Load<Texture2D>("Images\\" + name);
+                CreateDirectories(dumpPath, name);
+                texture.SaveAsPng(File.Create(Path.Combine(dumpPath, name.Replace("_", "/") + ".png")),
+                    texture.Width, texture.Height);
+                texture.Dispose();
             }
             watch.Stop();
             Console.WriteLine("Completed in {0} Seconds", watch.Elapsed.TotalSeconds);
             base.LoadContent();
         }
 
+        public IEnumerable<string> FilterFiles(string path, params string[] exts)
+        {
+            var files = Directory.EnumerateFiles(path, "*.xnb", SearchOption.AllDirectories);
+            return
+                    files.Where(file => exts.Any(file.Contains));
+        }
+
 
         public void CreateDirectories(string dataPath, string name)
         {
             var names = name.Split('_');
-            for (int i = 0; i < names.Length - 1; i++)
+            for (var i = 0; i < names.Length - 1; i++)
             {
                 dataPath = Path.Combine(dataPath, names[i]);
                 if (!Directory.Exists(dataPath))
