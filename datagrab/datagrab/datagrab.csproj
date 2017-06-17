@@ -108,10 +108,6 @@
       <Project>{c958f112-3f9f-4593-967e-d76f7c4892b5}</Project>
       <Name>TerraLimb</Name>
     </ProjectReference>
-    <ProjectReference Include="..\datagrabContent\datagrabContent.contentproj">
-      <Name>datagrabContent</Name>
-      <XnaReferenceType>Content</XnaReferenceType>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">

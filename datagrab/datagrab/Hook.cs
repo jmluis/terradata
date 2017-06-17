@@ -16,6 +16,12 @@ namespace datagrab
 {
     public class Hook : Main
     {
+#if DEBUG
+        private Formatting format = Formatting.Indented;
+#endif
+#if !DEBUG
+        private Formatting format = Formatting.None
+#endif
         readonly List<string> _toDownload = new List<string>
         {
             "Armor",
@@ -137,8 +143,8 @@ namespace datagrab
             var itm = new Item
             {
                 ItemID = 0,
-                ItemName = string.Empty,
-                Nick = string.Empty
+                ItemName = "(none)",
+                Nick = "(none)"
             };
 
             items.Add(0, itm);
@@ -149,11 +155,11 @@ namespace datagrab
                     items.Add(i, itm);
             }
             File.WriteAllText(path + @"\items.json",
-                        JsonConvert.SerializeObject(items, Formatting.Indented,
-                            new JsonSerializerSettings
-                            {
-                                DefaultValueHandling = DefaultValueHandling.Ignore
-                            }));
+                                JsonConvert.SerializeObject(items, format,
+                                    new JsonSerializerSettings
+                                    {
+                                        DefaultValueHandling = DefaultValueHandling.Ignore
+                                    }));
         }
 
         public void DumpBuffs(int count, string path)
@@ -162,8 +168,8 @@ namespace datagrab
             var buff = new Buff
             {
                 BuffID = 0,
-                BuffName = "",
-                BuffDescription = ""
+                BuffName = "(none)",
+                BuffDescription = "(none)"
             };
             buffs.Add(0, buff);
             for (var i = 0; i < count; i++)
@@ -173,7 +179,7 @@ namespace datagrab
                     buffs.Add(i, buff);
             }
             File.WriteAllText(path + @"\buffs.json",
-                JsonConvert.SerializeObject(buffs, Formatting.None,
+                JsonConvert.SerializeObject(buffs, format,
                     new JsonSerializerSettings { DefaultValueHandling = DefaultValueHandling.Ignore }));
         }
 
@@ -183,7 +189,7 @@ namespace datagrab
             var prfx = new Prefix
             {
                 ID = 0,
-                Name = ""
+                Name = "(none)"
             };
             prefixes.Add(0, prfx);
             for (var i = 0; i < count; i++)
@@ -194,7 +200,7 @@ namespace datagrab
                     prefixes.Add(i, prfx);
             }
             File.WriteAllText(path + @"\prefixes.json",
-                JsonConvert.SerializeObject(prefixes, Formatting.None,
+                JsonConvert.SerializeObject(prefixes, format,
                     new JsonSerializerSettings { DefaultValueHandling = DefaultValueHandling.Ignore }));
         }
 
